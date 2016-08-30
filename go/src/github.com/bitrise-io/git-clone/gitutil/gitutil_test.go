@@ -63,78 +63,80 @@ func TestCreateGitCmdSlice(t *testing.T) {
 	}
 }
 
-func TestConfigureCheckoutParam(t *testing.T) {
+func TestConfigureCheckoutWithParams(t *testing.T) {
 	t.Log("it sets pullRequestID")
 	{
 		pullRequestID := "1"
-		commitHash := ""
-		tag := ""
-		branch := ""
 		cloneDepth := ""
 
 		helper := Helper{}
-		helper.ConfigureCheckoutParam(pullRequestID, commitHash, tag, branch, cloneDepth)
-		require.Equal(t, "1", helper.pullRequestID)
+		helper.ConfigureCheckoutWithPullRequestID(pullRequestID, cloneDepth)
+		require.Equal(t, "1", helper.pullRequestHelper.pullRequestID)
 		require.Equal(t, "pull/1", helper.checkoutParam)
+		require.Equal(t, "", helper.cloneDepth)
+	}
+
+	t.Log("it sets pullRequestRepositoryURI and pullRequestBranch")
+	{
+		pullRequestRepositoryURI := "https://github.com/bitrise-io/steps-git-clone.git"
+		pullRequestBranch := "awesome-branch"
+		cloneDepth := ""
+
+		helper := Helper{}
+		helper.ConfigureCheckoutWithPullRequestURI(pullRequestRepositoryURI, pullRequestBranch, cloneDepth)
+		require.Equal(t, "https://github.com/bitrise-io/steps-git-clone.git", helper.pullRequestHelper.pullRequestRepositoryURI)
+		require.Equal(t, "awesome-branch", helper.pullRequestHelper.pullRequestBranch)
 		require.Equal(t, "", helper.cloneDepth)
 	}
 
 	t.Log("it configures with commitHash")
 	{
-		pullRequestID := ""
 		commitHash := "670f2fe2ab44f8563c6784317a80bc07fad54634"
 		tag := ""
 		branch := ""
 		cloneDepth := ""
 
 		helper := Helper{}
-		helper.ConfigureCheckoutParam(pullRequestID, commitHash, tag, branch, cloneDepth)
-		require.Equal(t, "", helper.pullRequestID)
+		helper.ConfigureCheckoutWithParams(commitHash, tag, branch, cloneDepth)
 		require.Equal(t, "670f2fe2ab44f8563c6784317a80bc07fad54634", helper.checkoutParam)
 		require.Equal(t, "", helper.cloneDepth)
 	}
 
 	t.Log("it configures with tag")
 	{
-		pullRequestID := ""
 		commitHash := ""
 		tag := "0.9.2"
 		branch := ""
 		cloneDepth := ""
 
 		helper := Helper{}
-		helper.ConfigureCheckoutParam(pullRequestID, commitHash, tag, branch, cloneDepth)
-		require.Equal(t, "", helper.pullRequestID)
+		helper.ConfigureCheckoutWithParams(commitHash, tag, branch, cloneDepth)
 		require.Equal(t, "0.9.2", helper.checkoutParam)
 		require.Equal(t, "", helper.cloneDepth)
 	}
 
 	t.Log("it configures with branch")
 	{
-		pullRequestID := ""
 		commitHash := ""
 		tag := ""
 		branch := "master"
 		cloneDepth := ""
 
 		helper := Helper{}
-		helper.ConfigureCheckoutParam(pullRequestID, commitHash, tag, branch, cloneDepth)
-		require.Equal(t, "", helper.pullRequestID)
+		helper.ConfigureCheckoutWithParams(commitHash, tag, branch, cloneDepth)
 		require.Equal(t, "master", helper.checkoutParam)
 		require.Equal(t, "", helper.cloneDepth)
 	}
 
 	t.Log("it configures with cloneDepth")
 	{
-		pullRequestID := ""
 		commitHash := ""
 		tag := ""
 		branch := ""
 		cloneDepth := "1"
 
 		helper := Helper{}
-		helper.ConfigureCheckoutParam(pullRequestID, commitHash, tag, branch, cloneDepth)
-		require.Equal(t, "", helper.pullRequestID)
+		helper.ConfigureCheckoutWithParams(commitHash, tag, branch, cloneDepth)
 		require.Equal(t, "", helper.checkoutParam)
 		require.Equal(t, "1", helper.cloneDepth)
 	}
@@ -142,14 +144,16 @@ func TestConfigureCheckoutParam(t *testing.T) {
 	t.Log("it configures checkout with order of params - pullRequestID > commitHash > tag > branch")
 	{
 		pullRequestID := "1"
+		pullRequestRepositoryURI := ""
+		pullRequestBranch := ""
 		commitHash := "670f2fe2ab44f8563c6784317a80bc07fad54634"
 		tag := "0.9.2"
 		branch := "master"
 		cloneDepth := "1"
 
 		helper := Helper{}
-		helper.ConfigureCheckoutParam(pullRequestID, commitHash, tag, branch, cloneDepth)
-		require.Equal(t, "1", helper.pullRequestID)
+		helper.ConfigureCheckout(pullRequestID, pullRequestRepositoryURI, pullRequestBranch, commitHash, tag, branch, cloneDepth)
+		require.Equal(t, "1", helper.pullRequestHelper.pullRequestID)
 		require.Equal(t, "pull/1", helper.checkoutParam)
 		require.Equal(t, "1", helper.cloneDepth)
 	}
@@ -157,14 +161,16 @@ func TestConfigureCheckoutParam(t *testing.T) {
 	t.Log("it configures checkout with order of params - pullRequestID > commitHash > tag > branch")
 	{
 		pullRequestID := ""
+		pullRequestRepositoryURI := ""
+		pullRequestBranch := ""
 		commitHash := "670f2fe2ab44f8563c6784317a80bc07fad54634"
 		tag := "0.9.2"
 		branch := "master"
 		cloneDepth := "1"
 
 		helper := Helper{}
-		helper.ConfigureCheckoutParam(pullRequestID, commitHash, tag, branch, cloneDepth)
-		require.Equal(t, "", helper.pullRequestID)
+		helper.ConfigureCheckout(pullRequestID, pullRequestRepositoryURI, pullRequestBranch, commitHash, tag, branch, cloneDepth)
+		require.Equal(t, "", helper.pullRequestHelper.pullRequestID)
 		require.Equal(t, "670f2fe2ab44f8563c6784317a80bc07fad54634", helper.checkoutParam)
 		require.Equal(t, "1", helper.cloneDepth)
 	}
@@ -172,14 +178,16 @@ func TestConfigureCheckoutParam(t *testing.T) {
 	t.Log("it configures checkout with order of params - pullRequestID > commitHash > tag > branch")
 	{
 		pullRequestID := ""
+		pullRequestRepositoryURI := ""
+		pullRequestBranch := ""
 		commitHash := ""
 		tag := "0.9.2"
 		branch := "master"
 		cloneDepth := "1"
 
 		helper := Helper{}
-		helper.ConfigureCheckoutParam(pullRequestID, commitHash, tag, branch, cloneDepth)
-		require.Equal(t, "", helper.pullRequestID)
+		helper.ConfigureCheckout(pullRequestID, pullRequestRepositoryURI, pullRequestBranch, commitHash, tag, branch, cloneDepth)
+		require.Equal(t, "", helper.pullRequestHelper.pullRequestID)
 		require.Equal(t, "0.9.2", helper.checkoutParam)
 		require.Equal(t, "1", helper.cloneDepth)
 	}
@@ -187,14 +195,16 @@ func TestConfigureCheckoutParam(t *testing.T) {
 	t.Log("it configures checkout with order of params - pullRequestID > commitHash > tag > branch")
 	{
 		pullRequestID := ""
+		pullRequestRepositoryURI := ""
+		pullRequestBranch := ""
 		commitHash := ""
 		tag := ""
 		branch := "master"
 		cloneDepth := "1"
 
 		helper := Helper{}
-		helper.ConfigureCheckoutParam(pullRequestID, commitHash, tag, branch, cloneDepth)
-		require.Equal(t, "", helper.pullRequestID)
+		helper.ConfigureCheckout(pullRequestID, pullRequestRepositoryURI, pullRequestBranch, commitHash, tag, branch, cloneDepth)
+		require.Equal(t, "", helper.pullRequestHelper.pullRequestID)
 		require.Equal(t, "master", helper.checkoutParam)
 		require.Equal(t, "1", helper.cloneDepth)
 	}

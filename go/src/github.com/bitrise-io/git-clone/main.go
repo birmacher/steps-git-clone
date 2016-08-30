@@ -46,6 +46,8 @@ func main() {
 	tag := os.Getenv("tag")
 	branch := os.Getenv("branch")
 	pullRequestID := os.Getenv("pull_request_id")
+	pullRequestURI := os.Getenv("pull_request_uri")
+	pullRequestBranch := os.Getenv("pull_request_branch")
 	cloneDepth := os.Getenv("clone_depth")
 	resetRepository := os.Getenv("reset_repository") == "Yes"
 
@@ -62,7 +64,7 @@ func main() {
 		log.Fail("Failed to create git helper, error: %s", err)
 	}
 
-	git.ConfigureCheckoutParam(pullRequestID, commit, tag, branch, cloneDepth)
+	git.ConfigureCheckout(pullRequestID, pullRequestURI, pullRequestBranch, commit, tag, branch, cloneDepth)
 
 	if err := git.Init(); err != nil {
 		log.Fail("Failed, error: %s", err)
@@ -134,6 +136,24 @@ func main() {
 			}
 
 			if err := git.Checkout(); err != nil {
+				log.Fail("Failed, error: %s", err)
+			}
+		}
+
+		if git.ShouldMergePullRequest() {
+			if err := retry.Times(retryCount).Wait(waitTime).Try(func(attempt uint) error {
+				if attempt > 0 {
+					log.Warn("Retrying...")
+				}
+
+				gitMergeErr := git.MergePullRequest()
+				if gitMergeErr != nil {
+					log.Warn("%d attempt failed:", attempt)
+					fmt.Println(gitMergeErr.Error())
+				}
+
+				return gitMergeErr
+			}); err != nil {
 				log.Fail("Failed, error: %s", err)
 			}
 		}
